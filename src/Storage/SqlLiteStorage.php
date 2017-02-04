@@ -27,8 +27,9 @@ class SqlLiteStorage implements Storage
         return $this->createTaskFromDb($taskData);
     }
 
-    public function getQueued(?array $workers = []): ?Task
+    public function getQueuedForWorker(?array $workers = []): ?Task
     {
+        $this->db->beginTransaction();
         $sql = "SELECT * FROM tasks WHERE status = :status";
         if (count($workers)) {
             array_walk($workers, function (&$item) {
@@ -44,10 +45,17 @@ class SqlLiteStorage implements Storage
         $taskData = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$taskData) {
+            $this->db->commit();
             return null;
         }
 
-        return $this->createTaskFromDb($taskData);
+        $task = $this->createTaskFromDb($taskData);
+        $task->startWorking();
+        $this->update($task);
+
+        $this->db->commit();
+
+        return $task;
     }
 
     public function update(Task $task): Task

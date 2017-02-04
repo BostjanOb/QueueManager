@@ -47,13 +47,21 @@ class Process
 
     private function getNewTask()
     {
-        $task = $this->client->request('getQueuedTask');
+        try {
+            $task = $this->client->request('getQueuedTask');
+        }
+        catch (\Exception $e) {
+            return null;
+        }
         return $task['result'];
     }
 
     public function sendResult($id, $result)
     {
-        $this->client->request('completeTask', [$id, $result]);
+        try {
+            $this->client->request('completeTask', [$id, $result]);
+        }
+        catch (\Exception $e) {}
     }
 
     public function setSleep(int $sleep)

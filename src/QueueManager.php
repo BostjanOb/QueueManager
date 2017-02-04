@@ -80,7 +80,7 @@ class QueueManager
      */
     public function getQueuedTask(?array $workers = null): ?Task
     {
-        return $this->storage->getQueued($workers);
+        return $this->storage->getQueuedForWorker($workers);
     }
 
 

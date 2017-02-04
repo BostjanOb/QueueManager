@@ -78,6 +78,12 @@ class Task implements \JsonSerializable
         $this->result = $result;
     }
 
+    public function startWorking()
+    {
+        $this->status = self::STATUS_RUNNING;
+        $this->started_at = time();
+    }
+
     function toArray()
     {
         return [

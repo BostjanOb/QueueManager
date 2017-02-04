@@ -11,7 +11,7 @@ class StorageStub implements \BostjanOb\QueuePlatform\Storage\Storage
         return $this->storage[$id] ?? null;
     }
 
-    public function getQueued(?array $workers = []): ?Task
+    public function getQueuedForWorker(?array $workers = []): ?Task
     {
         // TODO: Implement getQueued() method.
     }

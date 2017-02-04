@@ -59,7 +59,7 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $this->storage->add(Task::createNew('bar', 321));
         $this->storage->add(Task::createNew('john', 'doe'));
 
-        $task = $this->storage->getQueued();
+        $task = $this->storage->getQueuedForWorker();
 
         $this->assertEquals('foo', $task->getName());
     }
@@ -70,7 +70,7 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $this->storage->add(Task::createNew('bar', 321));
         $this->storage->add(Task::createNew('john', 'doe'));
 
-        $task = $this->storage->getQueued(['john']);
+        $task = $this->storage->getQueuedForWorker(['john']);
         $this->assertEquals('john', $task->getName());
     }
 
@@ -80,14 +80,32 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $this->storage->add(Task::createNew('bar', 321));
         $this->storage->add(Task::createNew('john', 'doe'));
 
-        $task = $this->storage->getQueued(['john', 'bar']);
+        $task = $this->storage->getQueuedForWorker(['john', 'bar']);
         $this->assertEquals('bar', $task->getName());
     }
 
     public function testReturnNullIfNoTaskExists()
     {
-        $task = $this->storage->getQueued(['john', 'bar']);
+        $task = $this->storage->getQueuedForWorker(['john', 'bar']);
         $this->assertNull($task);
+    }
+
+    public function testDontGetSameJobs() {
+        $this->storage->add(Task::createNew('bar', 321));
+        $this->storage->add(Task::createNew('foo', 321));
+
+        $task1 = $this->storage->getQueuedForWorker();
+        $task2 = $this->storage->getQueuedForWorker();
+
+        $this->assertEquals('bar' , $task1->getName() );
+        $this->assertEquals('foo' , $task2->getName() );
+    }
+
+    public function testMarkTaskAsRunnig() {
+        $this->storage->add(Task::createNew('bar', 321));
+        $task = $this->storage->getQueuedForWorker();
+
+        $this->assertEquals( Task::STATUS_RUNNING, $task->getStatus() );
     }
 
     public function testReturnNullIfAllTasksAreCompleted()
@@ -101,7 +119,7 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $this->storage->update($t1);
         $this->storage->update($t2);
 
-        $task = $this->storage->getQueued(['john', 'bar']);
+        $task = $this->storage->getQueuedForWorker(['john', 'bar']);
         $this->assertNull($task);
     }
 
