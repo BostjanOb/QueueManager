@@ -23,7 +23,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $req = '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]';
         $server = new Server($req);
         $this->assertEquals(
-            '{"jsonrpc": "2.0", "error": {"code": -32700, "message": "Parse error"}, "id": null}',
+            '{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null}',
             $server->run()
         );
     }
@@ -33,7 +33,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $req = '{"jsonrpc": "2.0", "method": 1, "params": "bar"}';
         $server = new Server($req);
         $this->assertEquals(
-            '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}',
+            '{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"},"id":null}',
             $server->run()
         );
     }
@@ -43,7 +43,7 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $req = '{"jsonrpc": "2.0", "method": "foobar", "id": "1"}';
         $server = new Server($req);
         $this->assertEquals(
-            '{"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "1"}',
+            '{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":"1"}',
             $server->run()
         );
     }
@@ -52,16 +52,48 @@ class ServerTest extends \PHPUnit\Framework\TestCase
     {
         $req = '{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}';
         $server = new Server($req);
+        $server->registerObject(new DummyObject());
         $this->assertEquals(
-            '{"jsonrpc": "2.0", "result": 19, "id": 1}',
+            '{"jsonrpc":"2.0","result":19,"id":1}',
             $server->run()
         );
 
         $req = '{"jsonrpc": "2.0", "method": "subtract", "params": [23, 42], "id": 1}';
         $server = new Server($req);
+        $server->registerObject(new DummyObject());
         $this->assertEquals(
-            '{"jsonrpc": "2.0", "result": -19, "id": 1}',
+            '{"jsonrpc":"2.0","result":-19,"id":1}',
             $server->run()
         );
     }
+
+    public function testMethodWithoutParams()
+    {
+        $req = '{"jsonrpc": "2.0", "method": "bar", "id": 1}';
+        $server = new Server($req);
+        $server->registerObject(new DummyObject());
+        $this->assertEquals(
+            '{"jsonrpc":"2.0","result":"Foo","id":1}',
+            $server->run()
+        );
     }
+
+    public function testRegisterOnlyGivenMethods()
+    {
+        $req = '{"jsonrpc": "2.0", "method": "subtract", "params": [42, 23], "id": 1}';
+        $server = new Server($req);
+        $server->registerObject(new DummyObject(), ['bar']);
+        $this->assertEquals(
+            '{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":"1"}',
+            $server->run()
+        );
+
+        $req = '{"jsonrpc": "2.0", "method": "bar", "id": 1}';
+        $server = new Server($req);
+        $server->registerObject(new DummyObject(), ['bar']);
+        $this->assertEquals(
+            '{"jsonrpc":"2.0","result":"Foo","id":1}',
+            $server->run()
+        );
+    }
+}
