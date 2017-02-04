@@ -53,6 +53,7 @@ class Server
 
         // no methods given ... get all public methods
         if (count($methods) == null) {
+            // todo: switch to reflection
             $methods = get_class_methods($object);
         }
 
@@ -64,7 +65,7 @@ class Server
     /**
      * Run server and return response
      */
-    public function run(): ?string
+    public function listen(): ?string
     {
         try {
             $this->validateRequest();
