@@ -112,11 +112,13 @@ class SqlLiteStorage implements Storage
         $task->setCompletedAt( $data['completed_at'] );
 
         if ( null != $data['params'] ) {
-            $task->setParams( json_decode($data['params'], true)['data'] );
+            $params = json_decode($data['params'], true);
+            $task->setParams( $params['data'] ?? null);
         }
 
         if ( null != $data['result'] ) {
-            $task->setResult( json_decode($data['result'], true)['data'] );
+            $result = json_decode($data['result'], true);
+            $task->setResult( $result['data'] ?? null);
         }
 
         return $task;

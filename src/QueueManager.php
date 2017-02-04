@@ -5,11 +5,26 @@ namespace BostjanOb\QueuePlatform;
 use BostjanOb\QueuePlatform\Rpc\Server;
 use BostjanOb\QueuePlatform\Storage\Storage;
 
+/**
+ * Class QueueManager
+ * @author Bostjan Oblak
+ * @package BostjanOb\QueuePlatform
+ */
 class QueueManager
 {
+    /**
+     * @var array
+     */
     private $workers = [];
+    /**
+     * @var Storage
+     */
     private $storage;
 
+    /**
+     * QueueManager constructor.
+     * @param Storage $storage
+     */
     public function __construct(Storage $storage)
     {
         $this->storage = $storage;
@@ -24,6 +39,10 @@ class QueueManager
      */
     public function registerWorker(string $name, Worker $worker): QueueManager
     {
+        if ( ! preg_match('/^[\w-]+$/', $name) ) {
+            throw new \InvalidArgumentException('Worker name could contains only word characters and -_!');
+        }
+
         $this->workers[$name] = $worker;
         return $this;
     }
@@ -95,11 +114,39 @@ class QueueManager
      */
     public function work()
     {
-        // parse cli
+        global $argv;
 
-        // start loop
-            // get task
-            // execute task
-            // send result
+        if ( !isset($argv[1]) || false === filter_var($argv[ count($argv)-1 ], FILTER_VALIDATE_URL) ) {
+            $this->cliHelp();
+            exit;
+        }
+
+        $opt = getopt('', ['workers::', 'sleep::']);
+
+        $workers = $this->workers;
+        if ( isset($opt['workers']) ) {
+            $optWorkers = explode(',', $opt['workers']);
+            if ( array_diff( $optWorkers, array_keys($this->workers)) ) {
+                die('Invalid worker');
+            }
+
+            $workers = array_intersect_key( $this->workers, array_flip($optWorkers) );
+        }
+
+        $process = new Process($argv[ count($argv)-1 ], $workers);
+
+        if ( isset($opt['sleep']) ) {
+            $process->setSleep((int)$opt['sleep']);
+        }
+
+        $process->run();
+    }
+
+    private function cliHelp() {
+        echo "To run worker process: php file [options] MANAGER_URL
+            Options:
+                --workers : list witch workers to run (default to all), example: --workers=foo,bar
+                --sleep : how many seconds to sleep if there is no job, example: --sleep=3
+                ";
     }
 }

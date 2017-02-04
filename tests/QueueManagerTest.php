@@ -6,7 +6,6 @@ require_once 'StorageStub.php';
 
 class DummyWorker implements \BostjanOb\QueuePlatform\Worker
 {
-
     public function run($params = null)
     {
         return $params[0] - $params[1];
@@ -33,6 +32,7 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(0, $task->getId());
         $this->assertEquals('foo', $task->getName());
+        $this->assertEquals([1, 2, 3], $task->getParams());
 
         $storageTask = $storage->get(0);
         $this->assertEquals('foo', $storageTask->getName());
@@ -50,7 +50,8 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0, $task->getId());
     }
 
-    public function testTaskIsCompleted() {
+    public function testTaskIsCompleted()
+    {
         $storage = new StorageStub();
         $manager = new QueueManager($storage);
         $manager->registerWorker('foo', new DummyWorker());
@@ -60,7 +61,8 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
 
         $storageTask = $storage->get($task->getId());
         $this->assertEquals('foo', $storageTask->getName());
-        $this->assertTrue( $storageTask->isCompleted() );
+        $this->assertTrue($storageTask->isCompleted());
+        $this->assertEquals(3, $storageTask->getResult());
     }
 
 }
