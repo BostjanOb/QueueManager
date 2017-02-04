@@ -24,14 +24,16 @@ class SqlLiteStorage implements Storage
             return null;
         }
 
-        return new Task($taskData);
+        return $this->createTaskFromDb($taskData);
     }
 
     public function getQueued(?array $workers = []): ?Task
     {
         $sql = "SELECT * FROM tasks WHERE status = :status";
-        if ( count($workers) ) {
-            array_walk($workers, function(&$item) { $item = $this->db->quote($item); });
+        if (count($workers)) {
+            array_walk($workers, function (&$item) {
+                $item = $this->db->quote($item);
+            });
             $sql .= " AND name IN (" . implode(',', $workers) . ")";
         }
         $sql .= " LIMIT 1";
@@ -45,7 +47,7 @@ class SqlLiteStorage implements Storage
             return null;
         }
 
-        return new Task($taskData);
+        return $this->createTaskFromDb($taskData);
     }
 
     public function update(Task $task): Task
@@ -58,11 +60,11 @@ class SqlLiteStorage implements Storage
                 WHERE id = :id");
 
         $stmt->execute([
-            'status' => $task->status,
-            'result' => $task->result,
-            'started_at' => $task->started_at,
-            'completed_at' => $task->completed_at,
-            'id' => $task->id
+            'status'       => $task->getStatus(),
+            'result'       => json_encode(['data' => $task->getResult()] ),
+            'started_at'   => $task->getStartedAt(),
+            'completed_at' => $task->getCompletedAt(),
+            'id'           => $task->getId(),
         ]);
 
         return $task;
@@ -72,11 +74,12 @@ class SqlLiteStorage implements Storage
     {
         $stmt = $this->db->prepare("INSERT INTO tasks (name, params, status) VALUES (:name, :params, :status)");
         $stmt->execute([
-            ':name' => $task->name,
-            'params' => json_encode($task->params),
-            'status' => Task::STATUS_QUEUED
+            ':name'  => $task->getName(),
+            'params' => json_encode(['data' => $task->getParams()] ),
+            'status' => $task->getStatus(),
         ]);
-        $task->id = $this->db->lastInsertId();
+
+        $task->setId( $this->db->lastInsertId() );
 
         return $task;
     }
@@ -97,5 +100,25 @@ class SqlLiteStorage implements Storage
         COMMIT;";
 
         $this->db->exec($sql);
+    }
+
+    private function createTaskFromDb($data)
+    {
+        $task = new Task();
+        $task->setId($data['id']);
+        $task->setName($data['name']);
+        $task->setStatus($data['status']);
+        $task->setStartedAt( $data['started_at'] );
+        $task->setCompletedAt( $data['completed_at'] );
+
+        if ( null != $data['params'] ) {
+            $task->setParams( json_decode($data['params'], true)['data'] );
+        }
+
+        if ( null != $data['result'] ) {
+            $task->setResult( json_decode($data['result'], true)['data'] );
+        }
+
+        return $task;
     }
 }

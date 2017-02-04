@@ -34,17 +34,13 @@ class QueueManager
      * @param array $params
      * @return Task
      */
-    public function queueTask(string $name, array $params = []): Task
+    public function queueTask(string $name, $params = null): Task
     {
         if ( ! isset($this->workers[$name]) ) {
-            throw new \InvalidArgumentException();
+            throw new \InvalidArgumentException('Worker does not exists');
         }
 
-        $task = new Task([
-            'name' => $name,
-            'params' => $params
-        ]);
-
+        $task = Task::createNew($name, $params);
         return $this->storage->add($task);
     }
 
@@ -62,7 +58,6 @@ class QueueManager
      * Get next available job for worker
      * @param array|null $workers
      * @return Task|null
-     * @internal param array|null $jobs Accepted jobs
      */
     public function getQueuedTask(?array $workers = null): ?Task
     {
@@ -79,10 +74,7 @@ class QueueManager
     {
         $task = $this->getTask($id);
 
-        $task->status = Task::STATUS_COMPLETED;
-        $task->completed_at = new \DateTime();
-        $task->result = $result;
-
+        $task->setCompleted($result);
         $this->storage->update($task);
     }
 
@@ -99,6 +91,7 @@ class QueueManager
 
     /**
      * Start queue work
+     * todo
      */
     public function work()
     {

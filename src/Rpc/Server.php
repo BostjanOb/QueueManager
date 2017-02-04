@@ -64,9 +64,12 @@ class Server
 
     /**
      * Run server and return response
+     * TODO: refactor
      */
     public function listen(): ?string
     {
+        // todo: refactor this
+//        header('Content-Type: application/json-rpc');
         try {
             $this->validateRequest();
         } catch (RpcException $e) {
@@ -81,11 +84,24 @@ class Server
         }
 
         // valid request ... run it
-        $params = $this->request['params'] ?? [];
-        $result = call_user_func_array([$this->methods[$this->request['method']], $this->request['method']], $params);
-        if ( !isset($this->request['id']) ) {
-            // is notify so no result is requested
-            return null;
+        try {
+            $params = $this->request['params'] ?? [];
+            $result = call_user_func_array([$this->methods[$this->request['method']], $this->request['method']],
+                $params);
+            if (!isset($this->request['id'])) {
+                // is notify so no result is requested
+                return null;
+            }
+        }
+        catch (\Exception $e) {
+            return json_encode([
+                'jsonrpc' => '2.0',
+                'error'   => [
+                    'code'    => -32000,
+                    'message' => $e->getMessage(),
+                ],
+                'id' => $this->request['id'] ?? null
+            ]);
         }
 
         return json_encode([

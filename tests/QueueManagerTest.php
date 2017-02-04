@@ -31,11 +31,11 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $manager->registerWorker('foo', new DummyWorker());
         $task = $manager->queueTask('foo', [1, 2, 3]);
 
-        $this->assertEquals(0, $task->id);
-        $this->assertEquals('foo', $task->name);
+        $this->assertEquals(0, $task->getId());
+        $this->assertEquals('foo', $task->getName());
 
         $storageTask = $storage->get(0);
-        $this->assertEquals('foo', $storageTask->name);
+        $this->assertEquals('foo', $storageTask->getName());
     }
 
     public function testTaskIsReturned()
@@ -44,10 +44,10 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $manager->registerWorker('foo', new DummyWorker());
         $t = $manager->queueTask('foo', [1, 2, 3]);
 
-        $task = $manager->getTask($t->id);
+        $task = $manager->getTask($t->getId());
 
         $this->assertFalse($task->isCompleted());
-        $this->assertEquals(0, $task->id);
+        $this->assertEquals(0, $task->getId());
     }
 
     public function testTaskIsCompleted() {
@@ -56,10 +56,10 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $manager->registerWorker('foo', new DummyWorker());
         $task = $manager->queueTask('foo', [1, 2, 3]);
 
-        $manager->completeTask($task->id, 3);
+        $manager->completeTask($task->getId(), 3);
 
-        $storageTask = $storage->get($task->id);
-        $this->assertEquals('foo', $storageTask->name);
+        $storageTask = $storage->get($task->getId());
+        $this->assertEquals('foo', $storageTask->getName());
         $this->assertTrue( $storageTask->isCompleted() );
     }
 

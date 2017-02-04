@@ -18,13 +18,13 @@ class StorageStub implements \BostjanOb\QueuePlatform\Storage\Storage
 
     public function update(Task $task): Task
     {
-        $this->storage[$task->id] = $task;
+        $this->storage[$task->getId()] = $task;
         return $task;
     }
 
     public function add(Task $task): Task
     {
-        $task->id = count($this->storage);
+        $task->setId( count($this->storage) );
         $this->storage[] = $task;
         return $task;
     }

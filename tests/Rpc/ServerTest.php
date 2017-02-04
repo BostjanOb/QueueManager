@@ -13,6 +13,11 @@ class DummyObject
     {
         return $param1 - $param2;
     }
+
+    public function fail()
+    {
+        throw new \Exception('Fail');
+    }
 }
 
 class ServerTest extends \PHPUnit\Framework\TestCase
@@ -93,6 +98,17 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $server->registerObject(new DummyObject(), ['bar']);
         $this->assertEquals(
             '{"jsonrpc":"2.0","result":"Foo","id":1}',
+            $server->listen()
+        );
+    }
+
+    public function testHandleException()
+    {
+        $req = '{"jsonrpc": "2.0", "method": "fail", "params": [], "id": 1}';
+        $server = new Server($req);
+        $server->registerObject(new DummyObject());
+        $this->assertEquals(
+            '{"jsonrpc":"2.0","error":{"code":-32000,"message":"Fail"},"id":1}',
             $server->listen()
         );
     }

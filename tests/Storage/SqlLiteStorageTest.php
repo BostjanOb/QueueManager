@@ -24,62 +24,64 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
 
     public function testInsertSetId()
     {
-        $task = $this->storage->add(new Task(['name' => 'foo', 'params' => 123]));
-        $this->assertEquals(1, $task->id);
+        $task = $this->storage->add(Task::createNew('foo', 123));
+        $this->assertEquals(1, $task->getId());
+        $this->assertEquals(123, $task->getParams());
     }
 
     public function testTaskGetsUpdated()
     {
-        $task = $this->storage->add(new Task(['name' => 'foo', 'params' => 123]));
+        $task = $this->storage->add(Task::createNew('foo', 123));
 
-        $task->result = 3;
-        $task->status = Task::STATUS_COMPLETED;
+        $task->setResult(3);
+        $task->setStatus(Task::STATUS_COMPLETED);
 
         $this->storage->update($task);
 
-        $dbTask = $this->storage->get($task->id);
+        $dbTask = $this->storage->get($task->getId());
 
         $this->assertTrue($dbTask->isCompleted());
+        $this->assertEquals(3, $dbTask->getResult());
     }
 
-    public function testGetsReturnsTask()
+    public function testGetReturnsTask()
     {
-        $task = $this->storage->add(new Task(['name' => 'foo', 'params' => 123]));
+        $task = $this->storage->add(Task::createNew('foo', 123));
 
-        $dbTask = $this->storage->get($task->id);
-        $this->assertEquals('foo', $dbTask->name);
+        $dbTask = $this->storage->get($task->getId());
+        $this->assertEquals('foo', $dbTask->getName());
         $this->assertFalse($dbTask->isCompleted());
     }
 
     public function testGetQueuedJob()
     {
-        $this->storage->add(new Task(['name' => 'foo', 'params' => 123]));
-        $this->storage->add(new Task(['name' => 'bar', 'params' => 123]));
-        $this->storage->add(new Task(['name' => 'john', 'params' => 123]));
+        $this->storage->add(Task::createNew('foo', 123));
+        $this->storage->add(Task::createNew('bar', 321));
+        $this->storage->add(Task::createNew('john', 'doe'));
 
         $task = $this->storage->getQueued();
 
-        $this->assertEquals('foo', $task->name);
+        $this->assertEquals('foo', $task->getName());
     }
 
     public function testGetQueuedJobForSingleWorker()
     {
-        $this->storage->add(new Task(['name' => 'foo', 'params' => 123]));
-        $this->storage->add(new Task(['name' => 'bar', 'params' => 123]));
-        $this->storage->add(new Task(['name' => 'john', 'params' => 123]));
+        $this->storage->add(Task::createNew('foo', 123));
+        $this->storage->add(Task::createNew('bar', 321));
+        $this->storage->add(Task::createNew('john', 'doe'));
 
         $task = $this->storage->getQueued(['john']);
-        $this->assertEquals('john', $task->name);
+        $this->assertEquals('john', $task->getName());
     }
 
     public function testGetQueuedJobForMultipleWorkers()
     {
-        $this->storage->add(new Task(['name' => 'foo', 'params' => 123]));
-        $this->storage->add(new Task(['name' => 'bar', 'params' => 123]));
-        $this->storage->add(new Task(['name' => 'john', 'params' => 123]));
+        $this->storage->add(Task::createNew('foo', 123));
+        $this->storage->add(Task::createNew('bar', 321));
+        $this->storage->add(Task::createNew('john', 'doe'));
 
         $task = $this->storage->getQueued(['john', 'bar']);
-        $this->assertEquals('bar', $task->name);
+        $this->assertEquals('bar', $task->getName());
     }
 
     public function testReturnNullIfNoTaskExists()
@@ -90,11 +92,11 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
 
     public function testReturnNullIfAllTasksAreCompleted()
     {
-        $t1 = $this->storage->add(new Task(['name' => 'bar', 'params' => 123]));
-        $t2 = $this->storage->add(new Task(['name' => 'john', 'params' => 123]));
+        $t1 = $this->storage->add(Task::createNew('foo', 123));
+        $t2 = $this->storage->add(Task::createNew('bar', 321));
 
-        $t1->status = Task::STATUS_COMPLETED;
-        $t2->status = Task::STATUS_COMPLETED;
+        $t1->setStatus(Task::STATUS_COMPLETED);
+        $t2->setStatus(Task::STATUS_COMPLETED);
 
         $this->storage->update($t1);
         $this->storage->update($t2);
