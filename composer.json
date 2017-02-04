@@ -1,0 +1,22 @@
+{
+    "name": "bostjanob/queue-platform",
+    "description": "PHP queue platform to simple build queue job",
+    "authors": [
+        {
+            "name": "Bostjan Oblak",
+            "email": "bostjan@muha.cc"
+        }
+    ],
+    "require": {
+        "php": "^7.0",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "BostjanOb\\QueuePlatform\\": "src/"
+        }
+    }
+}
