@@ -2,8 +2,10 @@
 
 namespace BostjanOb\QueuePlatform;
 
-use phpDocumentor\Reflection\Types\Self_;
-
+/**
+ * Class Task
+ * @package BostjanOb\QueuePlatform
+ */
 class Task implements \JsonSerializable
 {
     const STATUS_QUEUED = 'QUEUED';
@@ -46,6 +48,9 @@ class Task implements \JsonSerializable
      */
     private $status;
 
+    /**
+     * Task constructor.
+     */
     public function __construct()
     {
         $this->setStatus(self::STATUS_QUEUED);
@@ -67,23 +72,35 @@ class Task implements \JsonSerializable
         return $task;
     }
 
+    /**
+     * @return bool
+     */
     public function isCompleted()
     {
         return $this->status == self::STATUS_COMPLETED;
     }
 
+    /**
+     * @param $result
+     */
     public function setCompleted($result) {
         $this->status = self::STATUS_COMPLETED;
         $this->completed_at = time();
         $this->result = $result;
     }
 
+    /**
+     *
+     */
     public function startWorking()
     {
         $this->status = self::STATUS_RUNNING;
         $this->started_at = time();
     }
 
+    /**
+     * @return array
+     */
     function toArray()
     {
         return [
@@ -97,6 +114,9 @@ class Task implements \JsonSerializable
         ];
     }
 
+    /**
+     * @return array
+     */
     function jsonSerialize()
     {
         return $this->toArray();
@@ -112,10 +132,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param int $id
+     * @return Task
      */
-    public function setId(int $id)
+    public function setId(int $id): Task
     {
         $this->id = $id;
+        return $this;
     }
 
     /**
@@ -128,10 +150,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param string $name
+     * @return Task
      */
-    public function setName(string $name)
+    public function setName(string $name): Task
     {
         $this->name = $name;
+        return $this;
     }
 
     /**
@@ -144,10 +168,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param mixed $params
+     * @return Task
      */
-    public function setParams($params)
+    public function setParams($params): Task
     {
         $this->params = $params;
+        return $this;
     }
 
     /**
@@ -160,10 +186,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param int $started_at
+     * @return Task
      */
-    public function setStartedAt(?int $started_at)
+    public function setStartedAt(?int $started_at): Task
     {
         $this->started_at = $started_at;
+        return $this;
     }
 
     /**
@@ -176,10 +204,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param int $completed_at
+     * @return Task
      */
-    public function setCompletedAt(?int $completed_at)
+    public function setCompletedAt(?int $completed_at): Task
     {
         $this->completed_at = $completed_at;
+        return $this;
     }
 
     /**
@@ -192,10 +222,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param string $status
+     * @return Task
      */
-    public function setStatus(string $status)
+    public function setStatus(string $status): Task
     {
         $this->status = $status;
+        return $this;
     }
 
     /**
@@ -208,10 +240,12 @@ class Task implements \JsonSerializable
 
     /**
      * @param mixed $result
+     * @return Task
      */
-    public function setResult($result)
+    public function setResult($result): Task
     {
         $this->result = $result;
+        return $this;
     }
 
 }

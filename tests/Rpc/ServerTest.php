@@ -23,6 +23,14 @@ class DummyObject
 class ServerTest extends \PHPUnit\Framework\TestCase
 {
 
+    protected function setUp()
+    {
+        parent::setUp();
+
+        Server::$headers = [];
+    }
+
+
     public function testParseErrorForInvalidJson()
     {
         $req = '{"jsonrpc": "2.0", "method": "foobar, "params": "bar", "baz]';

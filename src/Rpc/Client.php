@@ -6,10 +6,12 @@ use BostjanOb\QueuePlatform\Rpc\Transport\Transport;
 
 /**
  * Simple JSON-RPC Client
- * @author Bostjan Oblak
  */
 class Client
 {
+    /**
+     * @var int
+     */
     private static $id = 1;
 
     /**
@@ -32,12 +34,26 @@ class Client
         $this->transport = $transport;
     }
 
+    /**
+     * Send request
+     *
+     * @param $method
+     * @param array $params
+     * @return mixed
+     */
     public function request($method, $params = [])
     {
         $json = $this->generateJson($method, $params);
         return json_decode($this->transport->send($this->uri, $json), true);
     }
 
+    /**
+     * Generate request json
+     *
+     * @param $method
+     * @param $params
+     * @return string
+     */
     private function generateJson($method, $params)
     {
         self::$id = self::$id + 1;

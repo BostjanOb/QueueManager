@@ -2,13 +2,28 @@
 
 namespace BostjanOb\QueuePlatform\Rpc\Transport;
 
+/**
+ * Class FileGetContentsTransport
+ * @package BostjanOb\QueuePlatform\Rpc\Transport
+ */
 class FileGetContentsTransport implements Transport
 {
+    /**
+     * Request headers
+     * @var array
+     */
     private $headers = [
         'Content-Type: application/json',
         'Accept: application/json',
     ];
 
+    /**
+     * Send request and return response
+     * @param $uri
+     * @param $json
+     * @return string
+     * @throws \Exception
+     */
     public function send($uri, $json) {
         $opts = [
             'http' => [

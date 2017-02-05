@@ -7,7 +7,6 @@ use BostjanOb\QueuePlatform\Storage\Storage;
 
 /**
  * Class QueueManager
- * @author Bostjan Oblak
  * @package BostjanOb\QueuePlatform
  */
 class QueueManager
@@ -60,7 +59,7 @@ class QueueManager
         }
 
         $task = Task::createNew($name, $params);
-        return $this->storage->add($task);
+        return $this->storage->push($task);
     }
 
     /**
@@ -80,7 +79,7 @@ class QueueManager
      */
     public function getQueuedTask(?array $workers = null): ?Task
     {
-        return $this->storage->getQueuedForWorker($workers);
+        return $this->storage->pop($workers);
     }
 
 
@@ -142,6 +141,9 @@ class QueueManager
         $process->run();
     }
 
+    /**
+     * Output help how to use cli to start process
+     */
     private function cliHelp() {
         echo "To run worker process: php file [options] MANAGER_URL
             Options:

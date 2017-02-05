@@ -2,17 +2,13 @@
 
 namespace BostjanOb\QueuePlatform\Rpc;
 
-/**
- * Simple JSON-RPC server
- * @author Bostjan Oblak
- */
 use BostjanOb\QueuePlatform\Rpc\Exceptions\InvalidRequestException;
 use BostjanOb\QueuePlatform\Rpc\Exceptions\MethodNotFoundException;
 use BostjanOb\QueuePlatform\Rpc\Exceptions\ParseException;
 use BostjanOb\QueuePlatform\Rpc\Exceptions\RpcException;
 
 /**
- * Class Server
+ * Simple JSON-RPC server
  * @package BostjanOb\QueuePlatform\Rpc
  */
 class Server
@@ -26,6 +22,10 @@ class Server
      * @var array
      */
     private $methods = [];
+
+    public static $headers = [
+        'Content-Type: application/json-rpc',
+    ];
 
     /**
      * Server constructor.
@@ -52,8 +52,7 @@ class Server
         }
 
         // no methods given ... get all public methods
-        if (count($methods) == null) {
-            // todo: switch to reflection
+        if (!count($methods)) {
             $methods = get_class_methods($object);
         }
 
@@ -64,50 +63,46 @@ class Server
 
     /**
      * Run server and return response
-     * TODO: refactor
      */
     public function listen(): ?string
     {
-        // todo: refactor this
-//        header('Content-Type: application/json-rpc');
-        try {
-            $this->validateRequest();
-        } catch (RpcException $e) {
-            return json_encode([
-                'jsonrpc' => '2.0',
-                'error'   => [
-                    'code'    => $e->getCode(),
-                    'message' => $e->getMessage(),
-                ],
-                'id'      => $e->getId(),
-            ]);
+        if (count(self::$headers)) {
+            header(implode("\r\n", self::$headers));
         }
 
-        // valid request ... run it
         try {
+            $this->validateRequest();
+
             $params = $this->request['params'] ?? [];
             $result = call_user_func_array([$this->methods[$this->request['method']], $this->request['method']],
                 $params);
+
             if (!isset($this->request['id'])) {
                 // is notify so no result is requested
                 return null;
             }
-        }
-        catch (\Exception $e) {
-            return json_encode([
-                'jsonrpc' => '2.0',
-                'error'   => [
-                    'code'    => -32000,
-                    'message' => $e->getMessage(),
-                ],
-                'id' => $this->request['id'] ?? null
-            ]);
+        } catch (RpcException $e) {
+            return $this->handleException($e->getCode(), $e->getMessage(), $e->getId());
+        } catch (\Exception $e) {
+            return $this->handleException(-32000, $e->getMessage(), $this->request['id'] ?? null);
         }
 
         return json_encode([
             'jsonrpc' => '2.0',
-            'result' => $result,
-            'id' => $this->request['id']
+            'result'  => $result,
+            'id'      => $this->request['id'],
+        ]);
+    }
+
+    private function handleException(int $code, string $message, $id): string
+    {
+        return json_encode([
+            'jsonrpc' => '2.0',
+            'error'   => [
+                'code'    => $code,
+                'message' => $message,
+            ],
+            'id'      => $id,
         ]);
     }
 

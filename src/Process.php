@@ -5,20 +5,44 @@ namespace BostjanOb\QueuePlatform;
 use BostjanOb\QueuePlatform\Rpc\Client;
 use BostjanOb\QueuePlatform\Rpc\Transport\FileGetContentsTransport;
 
+/**
+ * Class Process
+ * @package BostjanOb\QueuePlatform
+ */
 class Process
 {
+    /**
+     * Sleep interval where there are no jobs
+     * @var int
+     */
     private $sleep = 3;
 
+    /**
+     * Available workers
+     * @var array
+     */
     private $workers;
 
+    /**
+     * RPC client
+     * @var Client
+     */
     private $client;
 
+    /**
+     * Process constructor.
+     * @param string $managerUri
+     * @param array $workers
+     */
     public function __construct(string $managerUri, array $workers)
     {
         $this->client = new Client($managerUri, new FileGetContentsTransport());
         $this->workers = $workers;
     }
 
+    /**
+     * Run process
+     */
     public function run()
     {
         while (true) {
@@ -45,7 +69,11 @@ class Process
         }
     }
 
-    private function getNewTask()
+    /**
+     * Get new task from queue manager
+     * @return null
+     */
+    protected function getNewTask()
     {
         try {
             $task = $this->client->request('getQueuedTask');
@@ -56,7 +84,12 @@ class Process
         return $task['result'];
     }
 
-    public function sendResult($id, $result)
+    /**
+     * Send completed result to queue manager
+     * @param $id
+     * @param $result
+     */
+    protected function sendResult($id, $result)
     {
         try {
             $this->client->request('completeTask', [$id, $result]);
@@ -64,6 +97,10 @@ class Process
         catch (\Exception $e) {}
     }
 
+    /**
+     * Set sleep interval
+     * @param int $sleep
+     */
     public function setSleep(int $sleep)
     {
         $this->sleep = $sleep;

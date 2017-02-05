@@ -2,96 +2,24 @@
 
 namespace BostjanOb\QueuePlatform\Storage;
 
-use BostjanOb\QueuePlatform\Task;
-
-class SqlLiteStorage implements Storage
+/**
+ * Class SqlLiteStorage
+ * @package BostjanOb\QueuePlatform\Storage
+ */
+class SqlLiteStorage extends PdoStorage
 {
-    protected $db;
-
-    public function __construct(string $path)
+    /**
+     * SqlLiteStorage constructor.
+     * @param string $dsn Path to te sqlite file
+     */
+    public function __construct(string $dsn)
     {
-        $this->db = new \PDO('sqlite:' . $path);
-        $this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        parent::__construct('sqlite:' . $dsn);
     }
 
-    public function get(int $id): ?Task
-    {
-        $stmt = $this->db->prepare("SELECT * FROM tasks WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $taskData = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!$taskData) {
-            return null;
-        }
-
-        return $this->createTaskFromDb($taskData);
-    }
-
-    public function getQueuedForWorker(?array $workers = []): ?Task
-    {
-        $this->db->beginTransaction();
-        $sql = "SELECT * FROM tasks WHERE status = :status";
-        if (count($workers)) {
-            array_walk($workers, function (&$item) {
-                $item = $this->db->quote($item);
-            });
-            $sql .= " AND name IN (" . implode(',', $workers) . ")";
-        }
-        $sql .= " LIMIT 1";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute(['status' => Task::STATUS_QUEUED]);
-
-        $taskData = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        if (!$taskData) {
-            $this->db->commit();
-            return null;
-        }
-
-        $task = $this->createTaskFromDb($taskData);
-        $task->startWorking();
-        $this->update($task);
-
-        $this->db->commit();
-
-        return $task;
-    }
-
-    public function update(Task $task): Task
-    {
-        $stmt = $this->db->prepare("UPDATE tasks SET 
-                status = :status, 
-                result = :result, 
-                started_at = :started_at,
-                completed_at = :completed_at
-                WHERE id = :id");
-
-        $stmt->execute([
-            'status'       => $task->getStatus(),
-            'result'       => json_encode(['data' => $task->getResult()] ),
-            'started_at'   => $task->getStartedAt(),
-            'completed_at' => $task->getCompletedAt(),
-            'id'           => $task->getId(),
-        ]);
-
-        return $task;
-    }
-
-    public function add(Task $task): Task
-    {
-        $stmt = $this->db->prepare("INSERT INTO tasks (name, params, status) VALUES (:name, :params, :status)");
-        $stmt->execute([
-            ':name'  => $task->getName(),
-            'params' => json_encode(['data' => $task->getParams()] ),
-            'status' => $task->getStatus(),
-        ]);
-
-        $task->setId( $this->db->lastInsertId() );
-
-        return $task;
-    }
-
+    /**
+     * Create sqlite table
+     */
     public function createTable()
     {
         $sql = "BEGIN;
@@ -108,27 +36,5 @@ class SqlLiteStorage implements Storage
         COMMIT;";
 
         $this->db->exec($sql);
-    }
-
-    private function createTaskFromDb($data)
-    {
-        $task = new Task();
-        $task->setId($data['id']);
-        $task->setName($data['name']);
-        $task->setStatus($data['status']);
-        $task->setStartedAt( $data['started_at'] );
-        $task->setCompletedAt( $data['completed_at'] );
-
-        if ( null != $data['params'] ) {
-            $params = json_decode($data['params'], true);
-            $task->setParams( $params['data'] ?? null);
-        }
-
-        if ( null != $data['result'] ) {
-            $result = json_decode($data['result'], true);
-            $task->setResult( $result['data'] ?? null);
-        }
-
-        return $task;
     }
 }
