@@ -73,6 +73,22 @@ php process.php http://example.com/queue.php
 
 ## QueueManager JSON-RPC SERVER
 
+QueueManager JSON-RPC provides two methods to interact with.
+
+### - queueTask
+
+Queue task to be then latter pulled by process. It accepts one or two parameters.
+
+***first parameter*** is name of a worker registered with queue manager
+
+***second parameter*** is parameter for worker. It accepts single value. If you want to pass multiple valus use array.
+
+**returned result** as a json-rpc result, method returns task object
+
+### - getTask
+
+getTask method return task object. Method requires id of a task as a first parameter.
+
 ## QueueManager CLI working process
 
 To run long running process run php script from CLI (step 5.).
@@ -86,7 +102,7 @@ php file.php [OPTIONS] URL_TO_QUEUEMANAGER
 Available options:
   - **workers** - List workers to work with. Default to all registered in QueueManage. (split by comma)
   - **sleep** - How many seconds to wait if there is no task. Process will check if there is some task and if there is none it will wait before checking again.
-  
+
 Example with options:
 ```bash
 php file.php --workers=foo,bar --sleep=3 http://example.com/queue.php
