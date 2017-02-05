@@ -1,6 +1,7 @@
 {
     "name": "bostjanob/queue-platform",
     "description": "PHP queue platform to simple build queue job",
+    "license": "MIT",
     "authors": [
         {
             "name": "Bostjan Oblak",
