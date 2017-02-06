@@ -1,5 +1,7 @@
 # Queue Platform
 
+[![Build Status](https://travis-ci.org/BostjanOb/QueuePlatform.svg?branch=master)](https://travis-ci.org/BostjanOb/QueuePlatform)
+
 PHP Queue Platform provides an easy way to build queue system in PHP.
 
 ## Easy way
