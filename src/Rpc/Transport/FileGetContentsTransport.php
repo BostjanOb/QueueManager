@@ -24,7 +24,8 @@ class FileGetContentsTransport implements Transport
      * @return string
      * @throws \Exception
      */
-    public function send($uri, $json) {
+    public function send($uri, $json)
+    {
         $opts = [
             'http' => [
                 'method'  => 'GET',

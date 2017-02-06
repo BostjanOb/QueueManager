@@ -70,20 +70,21 @@ class Server
             header(implode("\r\n", self::$headers));
         }
 
-        if ( !isset( $this->request[0] ) ) {
+        if (!isset($this->request[0])) {
             // handle single request
-            return json_encode( $this->handleRequest($this->request) );
+            return json_encode($this->handleRequest($this->request));
         }
 
         $results = [];
         foreach ($this->request as $request) {
             $result = $this->handleRequest($request);
 
-            if ( $result !== null )
+            if ($result !== null) {
                 $results[] = $result;
+            }
         }
 
-        if ( count($results) === 1 ) {
+        if (count($results) === 1) {
             $results = array_pop($results);
         }
 
@@ -101,8 +102,10 @@ class Server
             $this->validateRequest($request);
 
             $params = $request['params'] ?? [];
-            $result = call_user_func_array([$this->methods[$request['method']], $request['method']],
-                $params);
+            $result = call_user_func_array(
+                [$this->methods[$request['method']], $request['method']],
+                $params
+            );
 
             if (!isset($request['id'])) {
                 // is notify so no result is requested

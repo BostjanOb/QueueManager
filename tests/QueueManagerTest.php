@@ -80,5 +80,4 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($storageTask->isFailed());
         $this->assertEquals('{"exception":"InvalidArgumentException","message":"Param should be numeric value","code":0}', $storageTask->getResult());
     }
-
 }

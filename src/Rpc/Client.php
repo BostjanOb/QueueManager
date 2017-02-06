@@ -65,5 +65,4 @@ class Client
             'params'  => $params,
         ]);
     }
-
 }

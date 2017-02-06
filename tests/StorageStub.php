@@ -24,7 +24,7 @@ class StorageStub implements \BostjanOb\QueuePlatform\Storage\Storage
 
     public function push(Task $task): Task
     {
-        $task->setId( count($this->storage) );
+        $task->setId(count($this->storage));
         $this->storage[] = $task;
         return $task;
     }

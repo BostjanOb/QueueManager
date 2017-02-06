@@ -69,7 +69,6 @@ class ProcessTest extends \PHPUnit\Framework\TestCase
     {
         m::close();
     }
-
 }
 
 class SquareWorker implements Worker
@@ -80,7 +79,7 @@ class SquareWorker implements Worker
      */
     public function run($params = null)
     {
-        if ( !is_numeric($params) ) {
+        if (!is_numeric($params)) {
             throw new \InvalidArgumentException('Param should be numeric value');
         }
 

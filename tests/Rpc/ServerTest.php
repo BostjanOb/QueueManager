@@ -11,7 +11,6 @@ class DummyObject
 
     public function notify()
     {
-
     }
 
     public function subtract(int $param1, int $param2): int
@@ -162,7 +161,8 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $result = json_decode($server->listen(), true);
 
         $this->assertEquals(3, count($result));
-        $this->assertEquals([
+        $this->assertEquals(
+            [
                 ["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null],
                 ["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null],
                 ["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null]
@@ -194,5 +194,4 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $this->assertContains(["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null], $result);
         $this->assertContains(["jsonrpc" => "2.0", "error" => ["code" => -32601, "message" => "Method not found"], "id" => "5"], $result);
     }
-
 }

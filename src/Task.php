@@ -117,7 +117,7 @@ class Task implements \JsonSerializable
     /**
      * @return array
      */
-    function toArray()
+    public function toArray()
     {
         return [
             'id'           => $this->getId(),
@@ -133,7 +133,7 @@ class Task implements \JsonSerializable
     /**
      * @return array
      */
-    function jsonSerialize()
+    public function jsonSerialize()
     {
         return $this->toArray();
     }
@@ -263,5 +263,4 @@ class Task implements \JsonSerializable
         $this->result = $result;
         return $this;
     }
-
 }

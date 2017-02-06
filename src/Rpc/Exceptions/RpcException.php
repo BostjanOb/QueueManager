@@ -6,7 +6,8 @@ class RpcException extends \Exception
 {
     protected $id = null;
 
-    public function setId(?string $id) {
+    public function setId(?string $id)
+    {
         $this->id = $id;
     }
 

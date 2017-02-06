@@ -90,22 +90,24 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $this->assertNull($task);
     }
 
-    public function testDontGetSameJobs() {
+    public function testDontGetSameJobs()
+    {
         $this->storage->push(Task::createNew('bar', 321));
         $this->storage->push(Task::createNew('foo', 321));
 
         $task1 = $this->storage->pop();
         $task2 = $this->storage->pop();
 
-        $this->assertEquals('bar' , $task1->getName() );
-        $this->assertEquals('foo' , $task2->getName() );
+        $this->assertEquals('bar', $task1->getName());
+        $this->assertEquals('foo', $task2->getName());
     }
 
-    public function testMarkTaskAsRunnig() {
+    public function testMarkTaskAsRunnig()
+    {
         $this->storage->push(Task::createNew('bar', 321));
         $task = $this->storage->pop();
 
-        $this->assertEquals( Task::STATUS_RUNNING, $task->getStatus() );
+        $this->assertEquals(Task::STATUS_RUNNING, $task->getStatus());
     }
 
     public function testReturnNullIfAllTasksAreCompleted()
@@ -122,5 +124,4 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $task = $this->storage->pop(['john', 'bar']);
         $this->assertNull($task);
     }
-
 }

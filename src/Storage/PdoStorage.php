@@ -30,9 +30,11 @@ abstract class PdoStorage implements Storage
         $this->dsn = $dsn;
     }
 
-    protected function connect() {
-        if ( null != $this->db)
+    protected function connect()
+    {
+        if (null != $this->db) {
             return;
+        }
 
         $this->db = new \PDO($this->dsn);
         $this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
