@@ -16,12 +16,25 @@ abstract class PdoStorage implements Storage
     protected $db;
 
     /**
+     * @var string
+     */
+    private $dsn;
+
+    /**
      * PdoStorage constructor.
      * @param string $dsn
      */
     public function __construct(string $dsn)
     {
-        $this->db = new \PDO($dsn);
+        $this->db = null;
+        $this->dsn = $dsn;
+    }
+
+    protected function connect() {
+        if ( null != $this->db)
+            return;
+
+        $this->db = new \PDO($this->dsn);
         $this->db->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->db->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
     }
@@ -32,6 +45,8 @@ abstract class PdoStorage implements Storage
      */
     public function get(int $id): ?Task
     {
+        $this->connect();
+
         $stmt = $this->db->prepare("SELECT * FROM tasks WHERE id = :id");
         $stmt->execute([':id' => $id]);
         $taskData = $stmt->fetch();
@@ -49,6 +64,8 @@ abstract class PdoStorage implements Storage
      */
     public function update(Task $task): Task
     {
+        $this->connect();
+
         $stmt = $this->db->prepare("UPDATE tasks SET 
                 status = :status, 
                 result = :result, 
@@ -73,6 +90,8 @@ abstract class PdoStorage implements Storage
      */
     public function pop(?array $workers = []): ?Task
     {
+        $this->connect();
+
         $this->db->beginTransaction();
         $sql = "SELECT * FROM tasks WHERE status = :status";
         if (count($workers)) {
@@ -106,6 +125,8 @@ abstract class PdoStorage implements Storage
      */
     public function push(Task $task): Task
     {
+        $this->connect();
+
         $stmt = $this->db->prepare("INSERT INTO tasks (name, params, status) VALUES (:name, :params, :status)");
         $stmt->execute([
             ':name'  => $task->getName(),

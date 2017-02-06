@@ -22,6 +22,8 @@ class SqlLiteStorage extends PdoStorage
      */
     public function createTable()
     {
+        $this->connect();
+
         $sql = "BEGIN;
             CREATE TABLE IF NOT EXISTS tasks (
                 id            INTEGER PRIMARY KEY AUTOINCREMENT,
