@@ -3,7 +3,6 @@
 namespace BostjanOb\QueuePlatform;
 
 use BostjanOb\QueuePlatform\Rpc\Client;
-use BostjanOb\QueuePlatform\Rpc\Transport\FileGetContentsTransport;
 
 /**
  * Class Process
@@ -28,16 +27,23 @@ class Process
      * @var Client
      */
     private $client;
+    /**
+     * @var bool
+     */
+    private $limitTask;
 
     /**
      * Process constructor.
-     * @param string $managerUri
+     * @param Client $rpcClient
      * @param array $workers
+     * @param bool $limitTask
+     * @internal param string $managerUri
      */
-    public function __construct(string $managerUri, array $workers)
+    public function __construct(Client $rpcClient, array $workers, $limitTask = false)
     {
-        $this->client = new Client($managerUri, new FileGetContentsTransport());
+        $this->client = $rpcClient;
         $this->workers = $workers;
+        $this->limitTask = $limitTask;
     }
 
     /**
@@ -46,26 +52,42 @@ class Process
     public function run()
     {
         while (true) {
+            if (!$this->limitTask && $this->limitTask === 0) {
+                break;
+            }
+
             $task = $this->getNewTask();
             if ($task == null) {
                 sleep($this->sleep);
                 continue;
             }
 
-            try {
-                if (!isset($this->workers[$task['name']])) {
-                    throw new \Exception('Invalid task');
-                }
+            $this->runTask($task);
 
-                $result = call_user_func_array(
-                    [$this->workers[$task['name']], 'run'],
-                    [$task['params']]
-                );
-
-                $this->sendResult($task['id'], $result);
-            } catch (\Exception $e) {
-                // todo: send failed response
+            if ($this->limitTask) {
+                $this->limitTask--;
             }
+        }
+    }
+
+    /**
+     * @param $task
+     */
+    protected function runTask($task): void
+    {
+        try {
+            if (!isset($this->workers[$task['name']])) {
+                throw new \Exception('Invalid task');
+            }
+
+            $result = call_user_func_array(
+                [$this->workers[$task['name']], 'run'],
+                [$task['params']]
+            );
+
+            $this->sendResult($task['id'], $result);
+        } catch (\Exception $e) {
+            $this->sendException($task['id'], $e);
         }
     }
 
@@ -77,8 +99,7 @@ class Process
     {
         try {
             $task = $this->client->request('getQueuedTask');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return null;
         }
         return $task['result'];
@@ -93,8 +114,27 @@ class Process
     {
         try {
             $this->client->request('completeTask', [$id, $result]);
+        } catch (\Exception $e) {
         }
-        catch (\Exception $e) {}
+    }
+
+    /**
+     * Send failed result back to queue manager
+     * @param $id
+     * @param \Exception $e
+     */
+    protected function sendException($id, \Exception $e)
+    {
+        $exception = [
+            'exception' => get_class($e),
+            'message'   => $e->getMessage(),
+            'code'      => $e->getCode(),
+        ];
+
+        try {
+            $this->client->request('failedTask', [$id, $exception]);
+        } catch (\Exception $e) {
+        }
     }
 
     /**

@@ -65,4 +65,20 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(3, $storageTask->getResult());
     }
 
+    public function testTaskIsFailed()
+    {
+        $storage = new StorageStub();
+        $manager = new QueueManager($storage);
+        $manager->registerWorker('foo', new DummyWorker());
+        $task = $manager->queueTask('foo', [1, 2, 3]);
+
+        $manager->failedTask($task->getId(), json_encode(["exception" => "InvalidArgumentException", "message" => "Param should be numeric value", "code" => 0]));
+
+        $storageTask = $storage->get($task->getId());
+        $this->assertEquals('foo', $storageTask->getName());
+        $this->assertFalse($storageTask->isCompleted());
+        $this->assertTrue($storageTask->isFailed());
+        $this->assertEquals('{"exception":"InvalidArgumentException","message":"Param should be numeric value","code":0}', $storageTask->getResult());
+    }
+
 }

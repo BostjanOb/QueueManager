@@ -80,17 +80,33 @@ class Task implements \JsonSerializable
         return $this->status == self::STATUS_COMPLETED;
     }
 
+    public function isFailed()
+    {
+        return $this->status == self::STATUS_FAILED;
+    }
+
     /**
      * @param $result
      */
-    public function setCompleted($result) {
+    public function setCompleted($result)
+    {
         $this->status = self::STATUS_COMPLETED;
         $this->completed_at = time();
         $this->result = $result;
     }
 
     /**
-     *
+     * @param $result
+     */
+    public function setFailed($result)
+    {
+        $this->status = self::STATUS_FAILED;
+        $this->completed_at = time();
+        $this->result = $result;
+    }
+
+    /**
+     * Start working on task
      */
     public function startWorking()
     {

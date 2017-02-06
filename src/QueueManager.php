@@ -2,6 +2,7 @@
 
 namespace BostjanOb\QueuePlatform;
 
+use BostjanOb\QueuePlatform\Rpc\Client;
 use BostjanOb\QueuePlatform\Rpc\Server;
 use BostjanOb\QueuePlatform\Storage\Storage;
 
@@ -38,7 +39,7 @@ class QueueManager
      */
     public function registerWorker(string $name, Worker $worker): QueueManager
     {
-        if ( ! preg_match('/^[\w-]+$/', $name) ) {
+        if (!preg_match('/^[\w-]+$/', $name)) {
             throw new \InvalidArgumentException('Worker name could contains only word characters and -_!');
         }
 
@@ -54,7 +55,7 @@ class QueueManager
      */
     public function queueTask(string $name, $params = null): Task
     {
-        if ( ! isset($this->workers[$name]) ) {
+        if (!isset($this->workers[$name])) {
             throw new \InvalidArgumentException('Worker does not exists');
         }
 
@@ -97,25 +98,36 @@ class QueueManager
     }
 
     /**
+     * @param int $id
+     * @param $result
+     */
+    public function failedTask(int $id, $result): void
+    {
+        $task = $this->getTask($id);
+
+        $task->setFailed($result);
+        $this->storage->update($task);
+    }
+
+    /**
      * Run RPC Server
      * @return null|string
      */
     public function listen(): ?string
     {
         $rpcServer = new Server();
-        $rpcServer->registerObject($this, ['queueTask', 'getTask', 'getQueuedTask', 'completeTask']);
+        $rpcServer->registerObject($this, ['queueTask', 'getTask', 'getQueuedTask', 'completeTask', 'failedTask']);
         return $rpcServer->listen();
     }
 
     /**
      * Start queue work
-     * todo
      */
     public function work()
     {
         global $argv;
 
-        if ( !isset($argv[1]) || false === filter_var($argv[ count($argv)-1 ], FILTER_VALIDATE_URL) ) {
+        if (!isset($argv[1]) || false === filter_var($argv[count($argv) - 1], FILTER_VALIDATE_URL)) {
             $this->cliHelp();
             exit;
         }
@@ -123,18 +135,20 @@ class QueueManager
         $opt = getopt('', ['workers::', 'sleep::']);
 
         $workers = $this->workers;
-        if ( isset($opt['workers']) ) {
+        if (isset($opt['workers'])) {
             $optWorkers = explode(',', $opt['workers']);
-            if ( array_diff( $optWorkers, array_keys($this->workers)) ) {
+            if (array_diff($optWorkers, array_keys($this->workers))) {
                 die('Invalid worker');
             }
 
-            $workers = array_intersect_key( $this->workers, array_flip($optWorkers) );
+            $workers = array_intersect_key($this->workers, array_flip($optWorkers));
         }
 
-        $process = new Process($argv[ count($argv)-1 ], $workers);
+        $client = new Client($argv[count($argv) - 1], new FileGetContentsTransport());
 
-        if ( isset($opt['sleep']) ) {
+        $process = new Process($client, $workers);
+
+        if (isset($opt['sleep'])) {
             $process->setSleep((int)$opt['sleep']);
         }
 
@@ -144,7 +158,8 @@ class QueueManager
     /**
      * Output help how to use cli to start process
      */
-    private function cliHelp() {
+    private function cliHelp()
+    {
         echo "To run worker process: php file [options] MANAGER_URL
             Options:
                 --workers : list witch workers to run (default to all), example: --workers=foo,bar
