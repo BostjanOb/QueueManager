@@ -102,7 +102,7 @@ class Process
         } catch (\Exception $e) {
             return null;
         }
-        return $task['result'];
+        return $task['result'] ?? null;
     }
 
     /**
