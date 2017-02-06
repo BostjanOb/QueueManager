@@ -158,11 +158,16 @@ class ServerTest extends \PHPUnit\Framework\TestCase
         $req = '[1,2,3]';
         $server = new Server($req);
         $server->registerObject(new DummyObject());
-        $this->assertEquals(
-            '[{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"},"id":null},
-            {"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"},"id":null},
-            {"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid Request"},"id":null}]',
-            $server->listen()
+
+        $result = json_decode($server->listen(), true);
+
+        $this->assertEquals(3, count($result));
+        $this->assertEquals([
+                ["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null],
+                ["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null],
+                ["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null]
+            ],
+            $result
         );
     }
 
@@ -177,16 +182,17 @@ class ServerTest extends \PHPUnit\Framework\TestCase
 
         $server = new Server($req);
         $server->registerObject(new DummyObject());
-        $this->assertEquals(
-            '[
-                {"jsonrpc": "2.0", "result": 6, "id": "1"},
-                {"jsonrpc": "2.0", "result": 19, "id": "2"},
-                {"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null},
-                {"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": "5"},
-                {"jsonrpc": "2.0", "result": "foo", "id": "9"}
-            ]',
-            $server->listen()
-        );
+
+        $result = json_decode($server->listen(), true);
+
+        $this->assertEquals(5, count($result));
+
+        $this->assertContains(["jsonrpc" => "2.0", "result" => 6, "id" => "1"], $result);
+        $this->assertContains(["jsonrpc" => "2.0", "result" => 19, "id" => "2"], $result);
+        $this->assertContains(["jsonrpc" => "2.0", "result" => "Foo", "id" => "9"], $result);
+
+        $this->assertContains(["jsonrpc" => "2.0", "error" => ["code" => -32600, "message" => "Invalid Request"], "id" => null], $result);
+        $this->assertContains(["jsonrpc" => "2.0", "error" => ["code" => -32601, "message" => "Method not found"], "id" => "5"], $result);
     }
 
 }

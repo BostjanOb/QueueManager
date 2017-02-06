@@ -70,40 +70,75 @@ class Server
             header(implode("\r\n", self::$headers));
         }
 
-        try {
-            $this->validateRequest();
+        if ( !isset( $this->request[0] ) ) {
+            // handle single request
+            return json_encode( $this->handleRequest($this->request) );
+        }
 
-            $params = $this->request['params'] ?? [];
-            $result = call_user_func_array([$this->methods[$this->request['method']], $this->request['method']],
+        $results = [];
+        foreach ($this->request as $request) {
+            $result = $this->handleRequest($request);
+
+            if ( $result !== null )
+                $results[] = $result;
+        }
+
+        if ( count($results) === 1 ) {
+            $results = array_pop($results);
+        }
+
+        return json_encode($results);
+    }
+
+    /**
+     * Handle single request
+     * @param mixed $request
+     * @return array
+     */
+    private function handleRequest($request) : ?array
+    {
+        try {
+            $this->validateRequest($request);
+
+            $params = $request['params'] ?? [];
+            $result = call_user_func_array([$this->methods[$request['method']], $request['method']],
                 $params);
 
-            if (!isset($this->request['id'])) {
+            if (!isset($request['id'])) {
                 // is notify so no result is requested
                 return null;
             }
         } catch (RpcException $e) {
             return $this->handleException($e->getCode(), $e->getMessage(), $e->getId());
         } catch (\Exception $e) {
-            return $this->handleException(-32000, $e->getMessage(), $this->request['id'] ?? null);
+            return $this->handleException(-32000, $e->getMessage(), $request['id'] ?? null);
         }
 
-        return json_encode([
+        return [
             'jsonrpc' => '2.0',
             'result'  => $result,
-            'id'      => $this->request['id'],
-        ]);
+            'id'      => $request['id'],
+        ];
     }
 
-    private function handleException(int $code, string $message, $id): string
+    /**
+     * Handle exception and prepare array for response
+     *
+     * @param int $code
+     * @param string $message
+     * @param $id
+     * @return array
+     */
+    private function handleException(int $code, string $message, $id): array
     {
-        return json_encode([
+        return [
             'jsonrpc' => '2.0',
             'error'   => [
                 'code'    => $code,
                 'message' => $message,
             ],
             'id'      => $id,
-        ]);
+        ];
     }
 
     /**
@@ -112,29 +147,29 @@ class Server
      * @throws MethodNotFoundException
      * @throws ParseException
      */
-    private function validateRequest(): void
+    private function validateRequest($request): void
     {
         // parsing json failed
-        if (null == $this->request) {
+        if (null === $request) {
             throw new ParseException();
         }
 
         // json is invalid
-        if (!isset($this->request['jsonrpc']) ||
-            !isset($this->request['method']) ||
-            !is_string($this->request['method']) ||
-            $this->request['jsonrpc'] !== '2.0' ||
-            (isset($this->request['params']) && !is_array($this->request['params']))
+        if (!isset($request['jsonrpc']) ||
+            !isset($request['method']) ||
+            !is_string($request['method']) ||
+            $request['jsonrpc'] !== '2.0' ||
+            (isset($request['params']) && !is_array($request['params']))
         ) {
             $invalidException = new InvalidRequestException();
-            $invalidException->setId($this->request['id'] ?? null);
+            $invalidException->setId($request['id'] ?? null);
             throw $invalidException;
         }
 
         // method does not exits
-        if (!isset($this->methods[$this->request['method']])) {
+        if (!isset($this->methods[$request['method']])) {
             $methodNotFound = new MethodNotFoundException();
-            $methodNotFound->setId($this->request['id'] ?? null);
+            $methodNotFound->setId($request['id'] ?? null);
             throw $methodNotFound;
         }
     }
