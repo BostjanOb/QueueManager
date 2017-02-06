@@ -4,6 +4,7 @@ namespace BostjanOb\QueuePlatform;
 
 use BostjanOb\QueuePlatform\Rpc\Client;
 use BostjanOb\QueuePlatform\Rpc\Server;
+use BostjanOb\QueuePlatform\Rpc\Transport\FileGetContentsTransport;
 use BostjanOb\QueuePlatform\Storage\Storage;
 
 /**
