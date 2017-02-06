@@ -1,24 +1,24 @@
 # Queue Platform
 
-PHP Queue Platform provides easy way to build queue system in PHP.
+PHP Queue Platform provides an easy way to build queue system in PHP.
 
 ## Easy way
 
 The easiest path to use queue platform is to use [QueuePlatformExample repository](https://github.com/BostjanOb/QueuePlatformExample).
 
-QueuePlatformExample provides complete working example with sample workers.
+QueuePlatformExample provides a complete working example with sample workers.
 To run and test it, it comes with configured vagrant setup. To use it just boot up vagrant with `vagrant up`.
 
-Vagrant setup will set up complete environment. It will start 5 working proccess, setup queue manager url and server testing gui.
+Vagrant setup will set up a complete environment. It will start 5 working processes, setup queue manager URL and server testing GUI.
 
-URL to testing gui: [http://192.168.29.6/index.html](http://192.168.29.6/index.html)
+URL to testing GUI: [http://192.168.29.6/index.html](http://192.168.29.6/index.html)
 
 How to modify it, see docs in QueuePlatformExample repository.
 
 ## Hard way
 
 ### 1. require package
-Require QueuePlatform package with composer `composer require bostjanob/queue-platform`.
+Require QueuePlatform package with composer: `composer require bostjanob/queue-platform`.
 
 ### 2. create workers
 Workers must extend `BostjanOb\QueuePlatform\Worker` interface.
@@ -27,9 +27,9 @@ The only method to implement is `run($params = null)`.
 
 ### 3. create QueueManager class and register workers
 
-Create new `BostjanOb\QueuePlatform\QueueManager` object and register your workers with it.
+Create a new `BostjanOb\QueuePlatform\QueueManager` object and register your workers with it.
 
-For constructor you **must** provide storage object (object that implements `\BostjanOb\QueuePlatform\Storage\Storage`)
+For constructor, you **must** provide storage object (object that implements `\BostjanOb\QueuePlatform\Storage\Storage`)
 
 ```php
 <?php
@@ -43,7 +43,7 @@ $qm->registerWorker('task-name', new Worker());
 
 ### 4. make queue manager JSON-RPC public
 
-To push task, get task status and to make communication with working processes QueueManager uses JSON-RPC. So it must be accessible by web server (over url).
+To push task, get task status and to make communication with working processes QueueManager uses JSON-RPC. So it must be accessible by a web server (over URL).
 
 To listen for json-rpc request run `listen()` on QueueManager.
 
@@ -57,7 +57,7 @@ echo $qm->listen();
 
 ### 5. start working processes
 
-To start long running working process call `work()` on QueueManager. Run it from CLI and pass url to QueueManager (in step 4) as paramater.
+To start long running working process call `work()` on QueueManager. Run it from CLI and pass URL to QueueManager (in step 4) as a parameter.
 
 ```php
 <?php
@@ -77,21 +77,21 @@ QueueManager JSON-RPC provides two methods to interact with.
 
 ### - queueTask
 
-Queue task to be then latter pulled by process. It accepts one or two parameters.
+Queue task to be then later pulled by the processor. It accepts one or two parameters.
 
-***first parameter*** is name of a worker registered with queue manager
+**the first parameter** is the name of a worker registered with a queue manager
 
-***second parameter*** is parameter for worker. It accepts single value. If you want to pass multiple valus use array.
+**the second parameter** is a parameter for the worker. It accepts a single value. If you want to pass multiple values use an array.
 
-**returned result** as a json-rpc result, method returns task object
+**returned result** is a task object as a JSON-RPC result
 
 ### - getTask
 
-getTask method return task object. Method requires id of a task as a first parameter.
+getTask method return task object. The method requires id of a task as a first parameter.
 
 ## QueueManager CLI working process
 
-To run long running process run php script from CLI (step 5.).
+To run long running process run PHP script from CLI (step 5.).
 
 Command to start process:
 ```bash
@@ -101,7 +101,7 @@ php file.php [OPTIONS] URL_TO_QUEUEMANAGER
 ##### Options
 Available options:
   - **workers** - List workers to work with. Default to all registered in QueueManage. (split by comma)
-  - **sleep** - How many seconds to wait if there is no task. Process will check if there is some task and if there is none it will wait before checking again.
+  - **sleep** - How many seconds to wait if there is no task. The process will check if there is some task and if there is none it will wait before checking again.
 
 Example with options:
 ```bash
