@@ -23,6 +23,14 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
         $manager->queueTask('foo', [1, 2, 3]);
     }
 
+    public function testThrowExceptionForInvalidWorkerName()
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $manager = new QueueManager(new StorageStub());
+        $manager->registerWorker('invalid worker name', new DummyWorker());
+    }
+
     public function testTaskIsAddedToStorage()
     {
         $storage = new StorageStub();
@@ -48,6 +56,17 @@ class QueueManagerTest extends \PHPUnit\Framework\TestCase
 
         $this->assertFalse($task->isCompleted());
         $this->assertEquals(0, $task->getId());
+    }
+
+    public function testTaskIsPopedOutOfQueue()
+    {
+        $manager = new QueueManager(new StorageStub());
+        $manager->registerWorker('foo', new DummyWorker());
+        $t = $manager->queueTask('foo', [1, 2, 3]);
+
+        $task = $manager->getQueuedTask();
+
+        $this->assertEquals( $t->getId(), $task->getId() );
     }
 
     public function testTaskIsCompleted()

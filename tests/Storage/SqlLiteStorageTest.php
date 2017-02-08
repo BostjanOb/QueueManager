@@ -53,6 +53,12 @@ class SqlLiteStorageTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($dbTask->isCompleted());
     }
 
+    public function testGetReturnsNullForNowFoundTask()
+    {
+        $this->storage->push(Task::createNew('foo', 123));
+        $this->assertNull( $this->storage->get(123) );
+    }
+
     public function testGetQueuedJob()
     {
         $this->storage->push(Task::createNew('foo', 123));

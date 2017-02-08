@@ -90,6 +90,23 @@ class ProcessTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true); // remove warning
     }
 
+    public function testIfMasterFailedReturnNull()
+    {
+        $task = ["result" => ["id" => 1, "name" => "square", "params" => 3]];
+
+        $client = m::mock(\BostjanOb\QueuePlatform\Rpc\Client::class);
+
+        $client->shouldReceive('request')->with('getQueuedTask')->once()->andThrow('Exception');
+        $client->shouldReceive('request')->with('getQueuedTask')->once()->andReturn($task);
+        $client->shouldReceive('request')->with('completeTask', [1, 9])->once();
+
+        $processor = new Process($client, ['square' => new SquareWorker()], 1);
+        $processor->setSleep(0);
+        $processor->run();
+
+        $this->assertTrue(true); // remove warning
+    }
+
     public function tearDown()
     {
         m::close();

@@ -1,4 +1,5 @@
 <?php
+
 use BostjanOb\QueuePlatform\Task;
 
 class StorageStub implements \BostjanOb\QueuePlatform\Storage\Storage
@@ -13,7 +14,13 @@ class StorageStub implements \BostjanOb\QueuePlatform\Storage\Storage
 
     public function pop(?array $workers = []): ?Task
     {
-        // TODO: Implement getQueued() method.
+        foreach ($this->storage as $item) {
+            if ( $item->getStatus() == Task::STATUS_QUEUED ) {
+                return $item;
+            }
+        }
+
+        return null;
     }
 
     public function update(Task $task): Task
